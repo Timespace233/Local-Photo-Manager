@@ -1,0 +1,21 @@
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 系统
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 依赖（如果以后加了）
+node_modules/
+
+# 日志
+*.log
+npm-debug.log*
+
+# 临时文件
+*.tmp
+*.bak

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>照片集 - beta 0.6.0</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <h1>📸 <span data-i18n="appTitle">照片集</span></h1>
+        <div class="nav-buttons">
+            <button class="nav-btn active" data-page="albums" data-i18n="navAlbums">相册集</button>
+            <button class="nav-btn" data-page="library" data-i18n="navLibrary">照片库</button>
+            <button class="nav-btn" data-page="settings" data-i18n="navSettings">设置</button>
+            <button class="nav-btn" data-page="about" data-i18n="navAbout">关于</button>
+        </div>
+    </nav>
+
+    <div class="toast-wrap" id="toastWrap"></div>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div style="text-align:center;">
+            <div class="loading-spinner"></div>
+            <p class="loading-text" data-i18n="loading">加载中...</p>
+        </div>
+    </div>
+
+    <!-- 相册集 -->
+    <div id="page-albums" class="page active">
+        <div class="header">
+            <h2 data-i18n="albumsTitle">相册集</h2>
+            <p id="albumLimitHint"></p>
+        </div>
+        <div class="search-wrap">
+            <input class="search-input" id="albumSearch" data-i18n-placeholder="searchAlbums"
+                data-i18n-title="titleAlbumSearch" placeholder="🔍 搜索相册..." title="搜索相册">
+        </div>
+        <div class="grid" id="albumsGrid"></div>
+        <button class="fab" id="fabCreateAlbum" data-i18n-title="titleCreateAlbum" title="创建新相册 (Ctrl+N)">➕</button>
+    </div>
+
+    <!-- 照片库 -->
+    <div id="page-library" class="page">
+        <div class="header">
+            <h2 data-i18n="libraryTitle">照片库</h2>
+            <p data-i18n="librarySubtitle">所有相册中的照片</p>
+        </div>
+        <div class="search-wrap">
+            <input class="search-input" id="librarySearch" data-i18n-placeholder="searchPhotos"
+                data-i18n-title="titlePhotoSearch" placeholder="🔍 搜索照片..." title="搜索照片">
+        </div>
+        <div class="grid" id="libraryGrid"></div>
+    </div>
+
+    <!-- 相册详情 -->
+    <div id="page-albumDetail" class="page">
+        <div class="header">
+            <h2 id="albumDetailTitle"></h2>
+            <button class="nav-btn" id="backToAlbums" style="margin-top:10px;" data-i18n="backToAlbums">← 返回相册集</button>
+        </div>
+        <div class="search-wrap">
+            <input class="search-input" id="albumDetailSearch" data-i18n-placeholder="searchAlbum"
+                data-i18n-title="titleAlbumDetailSearch" placeholder="🔍 搜索此相册..." title="搜索此相册">
+        </div>
+        <div class="grid" id="albumDetailGrid"></div>
+        <div class="import-wrap">
+            <button class="btn-primary" id="importToAlbumBtn" data-i18n="importPhotos">📁 导入照片 (Ctrl+I)</button>
+            <input type="file" id="fileInput" accept="image/*" multiple style="display:none;"
+                data-i18n-title="titleFileInput" title="选择图片文件">
+        </div>
+    </div>
+
+    <!-- 设置 -->
+    <div id="page-settings" class="page">
+        <div class="settings-wrap">
+            <div class="section">
+                <h3>👤 <span data-i18n="accountSection">账户</span></h3>
+                <div id="accountNotLoggedIn">
+                    <p style="color:var(--muted);margin-bottom:15px;" data-i18n="accountHint">注册或登录以解锁全部功能</p>
+                    <div style="display:flex;gap:10px;">
+                        <button class="btn btn-success" id="settingsRegisterBtn" data-i18n="registerBtn">📝 注册</button>
+                        <button class="btn btn-secondary" id="settingsLoginBtn" data-i18n="loginBtn">🔑 登录</button>
+                    </div>
+                    <div id="recentUsersSection" style="margin-top:20px;display:none;">
+                        <p style="font-size:.85rem;color:var(--muted);margin-bottom:10px;" data-i18n="quickLogin">快速登录：
+                        </p>
+                        <div class="user-list" id="recentUsersList"></div>
+                    </div>
+                </div>
+                <div id="accountLoggedIn" style="display:none;">
+                    <div class="account-box">
+                        <div class="account-avatar" id="accountAvatar">U</div>
+                        <div class="account-details">
+                            <p class="name"><span id="accountName"></span> <span class="pro-badge">PRO</span></p>
+                            <p class="email" id="accountEmail"></p>
+                            <p class="meta" id="accountMeta"></p>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:5px;">
+                            <button class="btn btn-secondary" id="changePasswordBtn" data-i18n="changePassword">🔑
+                                修改密码</button>
+                            <button class="btn btn-danger" id="logoutBtn" data-i18n="logout">退出</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-danger" id="deleteAccountBtn" style="margin-top:10px;"
+                        data-i18n="deleteAccount">🗑️ 注销账户</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>🌐 <span data-i18n="languageSection">语言</span></h3>
+                <div style="display:flex;gap:10px;">
+                    <button class="btn btn-secondary" id="langZh" data-i18n="chinese">中文</button>
+                    <button class="btn btn-secondary" id="langEn" data-i18n="english">English</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>💾 <span data-i18n="storageInfo">存储信息</span></h3>
+                <p id="storageUsageText" style="color:var(--muted);"></p>
+                <div class="storage-bar">
+                    <div class="storage-bar-fill" id="storageBarFill" style="width:0%;"></div>
+                </div>
+                <p id="storagePercentText" style="font-size:.8rem;color:var(--muted);margin-top:5px;"></p>
+            </div>
+
+            <div class="section">
+                <h3>🎨 <span data-i18n="themeSection">背景设置</span></h3>
+                <div class="setting-group">
+                    <label data-i18n="presetThemes">预设颜色主题：</label>
+                    <div class="color-options" id="colorOptions">
+                        <div class="color-dot" style="background:linear-gradient(135deg,#667eea,#764ba2)"
+                            data-theme="purple" data-i18n-title="themePurple" title="紫色"></div>
+                        <div class="color-dot" style="background:linear-gradient(135deg,#f093fb,#f5576c)"
+                            data-theme="pink" data-i18n-title="themePink" title="粉色"></div>
+                        <div class="color-dot" style="background:linear-gradient(135deg,#4facfe,#00f2fe)"
+                            data-theme="blue" data-i18n-title="themeBlue" title="蓝色"></div>
+                        <div class="color-dot" style="background:linear-gradient(135deg,#43e97b,#38f9d7)"
+                            data-theme="green" data-i18n-title="themeGreen" title="绿色"></div>
+                        <div class="color-dot" style="background:linear-gradient(135deg,#fa709a,#fee140)"
+                            data-theme="orange" data-i18n-title="themeOrange" title="橙色"></div>
+                        <div class="color-dot" style="background:linear-gradient(135deg,#a18cd1,#fbc2eb)"
+                            data-theme="lavender" data-i18n-title="themeLavender" title="薰衣草"></div>
+                        <div class="color-dot" style="background:#2c3e50" data-theme="dark" data-i18n-title="themeDark"
+                            title="深色"></div>
+                        <div class="color-dot" style="background:#ecf0f1" data-theme="light"
+                            data-i18n-title="themeLight" title="浅色"></div>
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <label><span data-i18n="customGradient">自定义渐变色</span> <span class="pro-badge">PRO</span>：</label>
+                    <div class="custom-color-inputs">
+                        <input type="color" id="customColor1" value="#667eea" data-locked="true"
+                            data-i18n-title="colorStart" title="选择起始颜色">
+                        <input type="text" id="customColorText1" placeholder="#667eea" data-locked="true"
+                            data-i18n-title="colorStartHex" title="输入十六进制颜色代码">
+                        <input type="color" id="customColor2" value="#764ba2" data-locked="true"
+                            data-i18n-title="colorEnd" title="选择结束颜色">
+                        <input type="text" id="customColorText2" placeholder="#764ba2" data-locked="true"
+                            data-i18n-title="colorEndHex" title="输入十六进制颜色代码">
+                        <button class="btn btn-secondary" id="applyCustomColor" data-locked="true"
+                            data-i18n-title="applyCustomTitle" title="应用自定义渐变色（需注册）" data-i18n="apply">应用</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>📋 <span data-i18n="sortSection">照片排序</span></h3>
+                <div class="sort-options" id="sortOptions">
+                    <button class="sort-btn" data-sort="default" data-i18n="sortDefault" title="按添加时间顺序">默认顺序</button>
+                    <button class="sort-btn" data-sort="date" data-i18n="sortDate" title="按日期从新到旧">按日期</button>
+                    <button class="sort-btn" data-sort="title" data-i18n="sortTitle" title="按标题首字母">按标题</button>
+                    <button class="sort-btn" data-sort="location" data-i18n="sortLocation" title="按地点首字母">按地点</button>
+                    <button class="sort-btn" data-sort="random" data-i18n="sortRandom" title="随机排列">随机排序</button>
+                    <button class="sort-btn" data-sort="custom" data-locked="true" title="拖拽照片进行排序（需注册）">
+                        <span data-i18n="sortCustom">自定义排序</span>
+                        <span class="pro-badge">PRO</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>⚙️ <span data-i18n="displaySection">显示设置</span></h3>
+                <label style="display:block;margin-bottom:8px;"><input type="checkbox" id="showAnimations" checked>
+                    <span data-i18n="showAnim">启用动画</span></label>
+                <label style="display:block;margin-bottom:8px;"><input type="checkbox" id="showLocation" checked> <span
+                        data-i18n="showLoc">显示地点</span></label>
+                <label style="display:block;margin-bottom:8px;"><input type="checkbox" id="showDate" checked> <span
+                        data-i18n="showDate">显示日期</span></label>
+            </div>
+
+            <div class="section">
+                <h3>💾 <span data-i18n="backupSection">备份</span></h3>
+                <button class="btn btn-secondary" id="exportData" data-locked="true" data-i18n-title="titleExport"
+                    title="导出备份（需注册）">
+                    <span data-i18n="exportData">导出备份</span>
+                    <span class="pro-badge">PRO</span>
+                </button>
+                <button class="btn btn-secondary" id="importData" data-locked="true" data-i18n-title="titleImport"
+                    title="导入备份（需注册）">
+                    <span data-i18n="importData">导入备份</span>
+                    <span class="pro-badge">PRO</span>
+                </button>
+                <input type="file" id="importDataInput" accept=".json" style="display:none;">
+            </div>
+
+            <div class="section">
+                <h3>🔄 <span data-i18n="resetSection">重置</span></h3>
+                <button class="btn btn-secondary" id="resetAppearance" data-i18n="resetAppearance"
+                    data-i18n-title="titleResetAppearance" title="恢复外观默认（不影响数据）">恢复外观默认</button>
+                <button class="btn btn-danger" id="clearAllData" data-i18n="clearAllData"
+                    data-i18n-title="titleClearAll" title="删除所有数据（不可恢复）">清空所有数据</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 关于 -->
+    <div id="page-about" class="page">
+        <div class="settings-wrap">
+            <div class="section" style="text-align:center;">
+                <h2 data-i18n="aboutTitle">关于</h2>
+                <p style="margin:20px 0;" data-i18n="aboutText">📸 本地照片管理应用</p>
+                <p style="margin:8px 0; font-size: 12px; line-height: 1;" data-i18n="developer">开发者：Timespace233</p>
+                <p style="margin:8px 0; font-size: 12px; line-height: 1;" data-i18n="version">版本：beta 0.6.0</p>
+                <a href="https://github.com/Timespace233/Local-Photo-Manager" target="_blank" rel="noopener"
+                    style="display:block; margin:8px 0; font-size:12px; line-height:1;" data-i18n="link">GitHub:
+                    https://github.com/Timespace233/Local-Photo-Manager</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 认证弹窗 -->
+    <div class="form-overlay" id="authOverlay">
+        <div class="form-box">
+            <button class="modal-close" data-close="authOverlay">×</button>
+            <h2 style="margin-bottom:15px;" id="authTitle">📝 注册账户</h2>
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tabRegister" data-i18n="registerTab">注册</button>
+                <button class="auth-tab" id="tabLogin" data-i18n="loginTab">登录</button>
+            </div>
+            <form id="registerForm" novalidate>
+                <div class="form-group"><label data-i18n="username">用户名 *</label><input type="text" id="regUsername"
+                        required>
+                    <div class="err-msg" id="usernameErr"></div>
+                </div>
+                <div class="form-group"><label data-i18n="email">邮箱 *</label><input type="email" id="regEmail" required>
+                    <div class="err-msg" id="emailErr"></div>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="password">密码 *</label>
+                    <input type="password" id="regPassword" required>
+                    <div class="password-strength" id="passwordStrength">
+                        <div class="strength-bar"></div>
+                        <div class="strength-bar"></div>
+                        <div class="strength-bar"></div>
+                    </div>
+                    <p class="strength-label" id="passwordStrengthLabel"></p>
+                    <div class="err-msg" id="passwordErr"></div>
+                </div>
+                <div class="form-group"><label data-i18n="confirmPassword">确认密码 *</label><input type="password"
+                        id="regConfirmPassword" required>
+                    <div class="err-msg" id="confirmPasswordErr"></div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-danger" data-close="authOverlay" data-i18n="cancel">取消</button>
+                    <button type="submit" class="btn btn-success" data-i18n="registerSubmit">注册</button>
+                </div>
+            </form>
+            <form id="loginForm" novalidate style="display:none;">
+                <div class="form-group"><label data-i18n="username">用户名 *</label><input type="text" id="loginUsername"
+                        required>
+                    <div class="err-msg" id="loginUsernameErr"></div>
+                </div>
+                <div class="form-group"><label data-i18n="password">密码 *</label><input type="password"
+                        id="loginPassword" required>
+                    <div class="err-msg" id="loginPasswordErr"></div>
+                </div>
+                <div class="form-actions">
+                    <label class="remember-me"><input type="checkbox" id="rememberMe"> <span
+                            data-i18n="rememberMe">保存登录状态</span></label>
+                    <button type="button" class="btn btn-danger" data-close="authOverlay" data-i18n="cancel">取消</button>
+                    <button type="submit" class="btn btn-success" data-i18n="loginSubmit">登录</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 修改密码弹窗 -->
+    <div class="form-overlay" id="changePasswordOverlay">
+        <div class="form-box">
+            <button class="modal-close" data-close="changePasswordOverlay">×</button>
+            <h2 style="margin-bottom:15px;" data-i18n="changePasswordTitle">🔑 修改密码</h2>
+            <form id="changePasswordForm" novalidate>
+                <div class="form-group"><label data-i18n="currentPassword">当前密码 *</label><input type="password"
+                        id="currentPassword" required>
+                    <div class="err-msg" id="currentPasswordErr"></div>
+                </div>
+                <div class="form-group"><label data-i18n="newPassword">新密码 *</label><input type="password"
+                        id="newPassword" required>
+                    <div class="err-msg" id="newPasswordErr"></div>
+                </div>
+                <div class="form-group"><label data-i18n="confirmNewPassword">确认新密码 *</label><input type="password"
+                        id="confirmNewPassword" required>
+                    <div class="err-msg" id="confirmNewPasswordErr"></div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-danger" data-close="changePasswordOverlay"
+                        data-i18n="cancel">取消</button>
+                    <button type="submit" class="btn btn-success" data-i18n="confirmChange">确认修改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 照片详情 -->
+    <div class="modal-overlay" id="photoModal">
+        <div class="modal-box">
+            <button class="modal-close" data-close="photoModal">×</button>
+            <img class="modal-img" id="modalImg" src="" alt="">
+            <div class="modal-details">
+                <h2 id="modalTitle"></h2>
+                <p id="modalDesc"></p>
+                <p>📍 <span id="modalLoc"></span></p>
+                <p>📅 <span id="modalDate"></span></p>
+                <p>📷 <span id="modalCam"></span></p>
+                <p>📁 <span id="modalAlbum"></span></p>
+                <div class="tags" id="modalTags"></div>
+                <div style="text-align:center;margin-top:15px;"><button class="btn btn-success" id="modalEditBtn"
+                        data-i18n="editPhoto">✏️ 编辑</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 照片编辑 -->
+    <div class="form-overlay" id="photoEditOverlay">
+        <div class="form-box">
+            <button class="modal-close" data-close="photoEditOverlay">×</button>
+            <h2 style="margin-bottom:15px;" data-i18n="editPhotoTitle">编辑照片</h2>
+            <form id="photoEditForm">
+                <input type="hidden" id="editPhotoId">
+                <div class="form-group"><label data-i18n="photoTitle">标题</label><input id="editTitle" required></div>
+                <div class="form-group"><label data-i18n="photoDesc">描述</label><textarea id="editDesc"></textarea></div>
+                <div class="form-group"><label data-i18n="photoLoc">地点</label><input id="editLoc"></div>
+                <div class="form-group"><label data-i18n="photoDate">日期</label><input type="date" id="editDate"></div>
+                <div class="form-group"><label data-i18n="photoCam">相机</label><input id="editCam"></div>
+                <div class="form-group"><label data-i18n="photoAlbum">相册</label><select id="editAlbumSelect"></select>
+                </div>
+                <div class="form-group"><label data-i18n="photoTags">标签</label><input id="editTags"></div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-danger" data-close="photoEditOverlay"
+                        data-i18n="cancel">取消</button>
+                    <button type="submit" class="btn btn-success" data-i18n="save">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 相册编辑 -->
+    <div class="form-overlay" id="albumEditOverlay">
+        <div class="form-box">
+            <button class="modal-close" data-close="albumEditOverlay">×</button>
+            <h2 style="margin-bottom:15px;" data-i18n="albumEditTitle">相册</h2>
+            <form id="albumEditForm">
+                <input type="hidden" id="editAlbumId">
+                <div class="form-group"><label data-i18n="albumName">名称</label><input id="editAlbumName" required></div>
+                <div class="form-group"><label data-i18n="albumDesc">描述</label><textarea id="editAlbumDesc"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-danger" data-close="albumEditOverlay"
+                        data-i18n="cancel">取消</button>
+                    <button type="submit" class="btn btn-success" data-i18n="save">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 封面选择 -->
+    <div class="form-overlay" id="coverSelectOverlay">
+        <div class="form-box">
+            <button class="modal-close" data-close="coverSelectOverlay">×</button>
+            <h2 style="margin-bottom:15px;" data-i18n="selectCover">选择封面</h2>
+            <div class="cover-select-grid" id="coverSelectGrid"></div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-danger" data-close="coverSelectOverlay"
+                    data-i18n="cancel">取消</button>
+                <button type="button" class="btn btn-success" id="confirmCoverBtn" data-i18n="confirm">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
