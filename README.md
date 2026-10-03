@@ -45,8 +45,8 @@ Built with vanilla HTML / CSS / JavaScript. **Zero dependencies, no build step.*
 
 **方式一：直接打开 / Option 1: Open directly**
 
-进入 `src/` 目录，用浏览器打开 `index.html`。
-Enter `src/` and open `index.html` in your browser.
+进入 `docs/` 目录，用浏览器打开 `index.html`。
+Enter `docs/` and open `index.html` in your browser.
 
 > ⚠️ `crypto.subtle` 在 `file://` 下部分浏览器受限，推荐方式二。
 > `crypto.subtle` may be restricted under `file://` in some browsers. Option 2 recommended.
@@ -54,7 +54,7 @@ Enter `src/` and open `index.html` in your browser.
 **方式二：本地服务器 / Option 2: Local server（推荐 / Recommended）**
 
 ```bash
-cd src
+cd docs
 python -m http.server 8000
 # 或 / or
 npx serve
@@ -74,9 +74,9 @@ https://timespace233.github.io/Local-Photo-Manager/
 
 **方式四：部署到其他静态托管 / Option 4: Deploy to Other Static Hosting**
 
-本项目是纯静态文件，也可以部署到 Vercel、Netlify、Cloudflare Pages 等平台，发布目录选 `src/`。
+本项目是纯静态文件，也可以部署到 Vercel、Netlify、Cloudflare Pages 等平台，发布目录选 `docs/`。
 
-This project is purely static and can also be deployed to Vercel, Netlify, Cloudflare Pages, etc. Set the publish directory to `src/`.
+This project is purely static and can also be deployed to Vercel, Netlify, Cloudflare Pages, etc. Set the publish directory to `docs/`.
 
 ---
 
@@ -84,7 +84,7 @@ This project is purely static and can also be deployed to Vercel, Netlify, Cloud
 
 ```
 Local-Photo-Manager/
-├── src/
+├── docs/
 │   ├── index.html      # 页面结构 / Page structure
 │   ├── script.js       # 核心逻辑 / Core logic
 │   └── style.css       # 样式 / Styles
